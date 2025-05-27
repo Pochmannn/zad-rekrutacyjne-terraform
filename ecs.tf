@@ -9,6 +9,17 @@ resource "aws_ecs_task_definition" "minio_task" {
   cpu                      = "256"
   memory                   = "512"
   execution_role_arn       = aws_iam_role.minio_task_execution_role.arn
+
+  volume {
+    name = "minio-data"
+
+    efs_volume_configuration {
+      file_system_id          = aws_efs_file_system.minio_efs.id
+      transit_encryption      = "ENABLED"
+      root_directory          = "/"
+    }
+  }
+
   container_definitions = jsonencode([
     {
       name  = "minio",
@@ -36,10 +47,16 @@ resource "aws_ecs_task_definition" "minio_task" {
 
       ],
       command = ["server", "/data", "--console-address", ":9001"]
+      mountPoints = [
+        {
+          sourceVolume  = "minio-data"
+          containerPath = "/data"
+          readOnly      = false
+        }
+      ]
     }
   ])
 }
-
 
 resource "aws_ecs_service" "minio_service" {
   name            = "minio-service"

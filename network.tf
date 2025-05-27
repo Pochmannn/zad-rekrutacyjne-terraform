@@ -68,6 +68,14 @@ resource "aws_security_group" "minio_sg" {
     protocol    = "-1"
     cidr_blocks = ["0.0.0.0/0"]
   }
+
+  ingress {
+      from_port   = 2049
+      to_port     = 2049
+      protocol    = "tcp"
+      cidr_blocks = ["0.0.0.0/0"]
+    }
+
 }
 
 resource "aws_lb" "minio_alb" {
@@ -86,7 +94,7 @@ resource "aws_lb_target_group" "minio_api_tg" {
   target_type = "ip"
 
   health_check {
-    path                = "/"
+    path                = "/minio/health/live"
     interval            = 30
     timeout             = 5
     healthy_threshold   = 2
@@ -103,7 +111,7 @@ resource "aws_lb_target_group" "minio_console_tg" {
   target_type = "ip"
 
   health_check {
-    path                = "/"
+    path                = "/minio/health/live"
     interval            = 30
     timeout             = 5
     healthy_threshold   = 2
